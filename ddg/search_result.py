@@ -23,4 +23,4 @@ class SearchResult(object):
 
     @classmethod
     def get_column_names(cls):
-        return ["query", "rank", "title", "url", "snippet"]
+        return ["query", "rank", "url", "title", "snippet"]
