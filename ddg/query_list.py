@@ -49,9 +49,9 @@ class QueryList(object):
         self.filename = os.path.basename(input_file)
         logger.info(str(len(self.queries)) + " search queries have been imported.")
 
-    def retrieve_search_results(self):
+    def retrieve_search_results(self, max_results, min_wait, max_wait):
         for query in self.queries:
-            query.retrieve_search_results()
+            query.retrieve_search_results(max_results, min_wait, max_wait)
 
     def write_to_csv(self, output_dir, delimiter):
         """

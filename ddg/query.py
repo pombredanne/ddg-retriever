@@ -1,11 +1,11 @@
 import logging
 import urllib.parse
-
 import requests
-
-from lxml import html
+import time
 
 from ddg.search_result import SearchResult
+from random import randint
+from lxml import html
 
 logger = logging.getLogger("ddg-retriever_logger")
 
@@ -26,8 +26,12 @@ class Query(object):
         # session for data retrieval
         self.session = requests.Session()
 
-    def retrieve_search_results(self):
+    def retrieve_search_results(self, max_results, min_wait, max_wait):
         try:
+            # reduce request frequency as configured
+            delay = randint(min_wait, max_wait)  # delay between requests in milliseconds
+            time.sleep(delay / 1000)  # sleep for delay ms to prevent getting blocked
+
             # retrieve data
             response = self.session.get(self.uri, headers=self.headers)
 
@@ -53,6 +57,10 @@ class Query(object):
                         title,
                         snippet
                     ))
+
+                    # retrieve only up to max_results results
+                    if rank == max_results:
+                        break
 
                 logger.info('Successfully parsed result list for query: ' + str(self))
             else:

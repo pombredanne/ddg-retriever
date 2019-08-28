@@ -22,19 +22,20 @@ and [virtualenv](https://github.com/pyenv/pyenv-virtualenv) before executing the
 
 Basic usage:
 
-    python3 ddg-retriever.py -i <path_to_input_file> -o <path_to_output_dir> -e <True/False>
-
-Call without parameters to get information about possible parameters:
-
-	python3 ddg-retriever.py
-    
-	usage: ddg-retriever.py [-h] -i INPUT_FILE -o OUTPUT_DIR [-e EXACT_MATCHES]
-	                        [-d DELIMITER]
-	ddg-retriever.py: error: the following arguments are required: -i/--input-file, -o/--output-dir
-
-
+    python3 ddg-retriever.py -c <path_to_config_file>
 
 # Configuration
+
+The configuration in stored in a [configuration file](config.ini):
+
+    [DEFAULT]
+    InputFile = input/queries.csv
+    OutputDirectory = output
+    Delimiter = ,
+    ExactMatches = True
+    MaxResults = 25
+    MinWait = 500
+    MaxWait = 2000
 
 As input, the tool expects a CSV file with one column named `query`.
 An exemplary input file can be found [here](input/queries.csv):
@@ -47,18 +48,18 @@ An exemplary input file can be found [here](input/queries.csv):
 
 To retrieve the search results as exact matches for the configured queries, you just need to run the following command:
 
-    python3 ddg-retriever.py -i input/queries.csv -o output/ -e True
+    python3 ddg-retriever.py -c config.ini
 
 The tool logs the retrieval process:
 
-	2019-08-27 15:52:16,369 ddg-retriever_logger INFO: Reading search queries from input/queries.csv...
-	2019-08-27 15:52:16,370 ddg-retriever_logger INFO: 2 search queries have been imported.
-	2019-08-27 15:52:18,875 ddg-retriever_logger INFO: Successfully retrieved search results for query: "interrupt handler"
-	2019-08-27 15:52:18,880 ddg-retriever_logger INFO: Successfully parsed result list for query: "interrupt handler"
-	2019-08-27 15:52:20,965 ddg-retriever_logger INFO: Successfully retrieved search results for query: "sql injection"
-	2019-08-27 15:52:20,973 ddg-retriever_logger INFO: Successfully parsed result list for query: "sql injection"
-	2019-08-27 15:52:20,973 ddg-retriever_logger INFO: Exporting search results to output/queries.csv...
-	2019-08-27 15:52:20,974 ddg-retriever_logger INFO: 72 search results have been exported.
+    2019-08-28 14:27:27,484 ddg-retriever_logger INFO: Reading search queries from input/queries.csv...
+    2019-08-28 14:27:27,491 ddg-retriever_logger INFO: 2 search queries have been imported.
+    2019-08-28 14:27:28,843 ddg-retriever_logger INFO: Successfully retrieved search results for query: "interrupt handler"
+    2019-08-28 14:27:28,847 ddg-retriever_logger INFO: Successfully parsed result list for query: "interrupt handler"
+    2019-08-28 14:27:29,694 ddg-retriever_logger INFO: Successfully retrieved search results for query: "sql injection"
+    2019-08-28 14:27:29,701 ddg-retriever_logger INFO: Successfully parsed result list for query: "sql injection"
+    2019-08-28 14:27:29,708 ddg-retriever_logger INFO: Exporting search results to output/queries.csv...
+    2019-08-28 14:27:29,709 ddg-retriever_logger INFO: 50 search results have been exported.
 
 And writes the [retrieved data](output/queries.csv) to the configured output directory:
 
