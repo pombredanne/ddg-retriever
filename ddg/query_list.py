@@ -17,7 +17,7 @@ class QueryList(object):
         self.filename = ""
         self.queries = []
 
-    def read_from_csv(self, input_file, exact_matches, delimiter):
+    def read_from_csv(self, input_file, exact_matches, replace_parentheses, delimiter):
         """
         Read search queries from a CSV file (header required).
         :param input_file: Path to the CSV file.
@@ -41,7 +41,7 @@ class QueryList(object):
             for row in reader:
                 if row:
                     self.queries.append(
-                        Query(row[query], exact_matches)
+                        Query(row[query], exact_matches, replace_parentheses)
                     )
                 else:
                     raise IllegalArgumentError("Wrong CSV format.")

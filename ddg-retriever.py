@@ -46,13 +46,14 @@ def main():
 
     # requests
     exact_matches = config['DEFAULT'].getboolean('ExactMatches', True)
+    replace_parentheses = config['DEFAULT'].getboolean('ReplaceParentheses', True)
     max_results = config['DEFAULT'].getint('MaxResults', 25)
     min_wait = config['DEFAULT'].getint('MinWait', 500)
     max_wait = config['DEFAULT'].getint('MaxWait', 2000)
 
     # process venues
     query_list = QueryList()
-    query_list.read_from_csv(input_file, exact_matches, delimiter)
+    query_list.read_from_csv(input_file, exact_matches, replace_parentheses, delimiter)
     query_list.retrieve_search_results(max_results, min_wait, max_wait)
     query_list.write_to_csv(output_dir, delimiter)
 

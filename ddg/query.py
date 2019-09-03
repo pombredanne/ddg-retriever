@@ -1,4 +1,5 @@
 import logging
+import re
 import urllib.parse
 import requests
 import time
@@ -13,8 +14,23 @@ logger = logging.getLogger("ddg-retriever_logger")
 class Query(object):
     """ A venue on DBLP. """
 
-    def __init__(self, query_string, exact_matches):
-        self.query_string = '"' + str(query_string) + '"' if exact_matches else str(query_string)
+    parentheses_regex = re.compile("\s*[()]\s*")
+
+    def __init__(self, query_string, exact_matches, replace_parentheses):
+
+        if replace_parentheses:
+            sub_queries = filter(lambda q: len(q) > 0, Query.parentheses_regex.split(query_string))
+
+            if exact_matches:
+                self.query_string = '"' + '" "'.join(sub_queries) + '"'
+            else:
+                self.query_string = ' '.join(sub_queries)
+        else:
+            if exact_matches:
+                self.query_string = '"' + str(query_string) + '"'
+            else:
+                self.query_string = str(query_string)
+
         self.uri = 'https://duckduckgo.com/html/?q=' + urllib.parse.quote(self.query_string)
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
