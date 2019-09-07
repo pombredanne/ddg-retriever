@@ -3,8 +3,8 @@ import csv
 import logging
 import os
 
-from ddg.search_result import SearchResult
 from ddg.query import Query
+from ddg.search_result_list import SearchResultList
 from util.exceptions import IllegalArgumentError
 
 logger = logging.getLogger("ddg-retriever_logger")
@@ -15,11 +15,14 @@ class QueryList(object):
 
     def __init__(self):
         self.filename = ""
-        self.queries = []
+        self.values = []
+        self.search_results = SearchResultList()
 
     def read_from_csv(self, input_file, exact_matches, replace_parentheses, delimiter):
         """
         Read search queries from a CSV file (header required).
+        :param replace_parentheses: Replace Wikipedia parentheses in query strings
+        :param exact_matches: Only search for exact matches of query strings
         :param input_file: Path to the CSV file.
         :param delimiter: Column delimiter in CSV file (typically ',').
         """
@@ -40,58 +43,25 @@ class QueryList(object):
             # read CSV file
             for row in reader:
                 if row:
-                    self.queries.append(
+                    self.values.append(
                         Query(row[query], exact_matches, replace_parentheses)
                     )
                 else:
                     raise IllegalArgumentError("Wrong CSV format.")
 
         self.filename = os.path.basename(input_file)
-        logger.info(str(len(self.queries)) + " search queries have been imported.")
+        logger.info(str(len(self.values)) + " search queries have been imported.")
 
     def retrieve_search_results(self, max_results, min_wait, max_wait):
-        for query in self.queries:
+        for query in self.values:
             query.retrieve_search_results(max_results, min_wait, max_wait)
+            for search_result in query.search_results.values:
+                self.search_results.values.append(search_result)
 
-    def write_to_csv(self, output_dir, delimiter):
+    def write_search_results_to_csv(self, output_dir, delimiter):
         """
-        Export retrieved search results to a CSV file.
+        Export search results to a CSV file.
         :param output_dir: Target directory for generated CSV file.
         :param delimiter: Column delimiter in CSV file (typically ',').
         """
-
-        if len(self.queries) == 0:
-            logger.info("Nothing to export.")
-            return
-
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        file_path = os.path.join(output_dir, self.filename)
-
-        # write search results to UTF8-encoded CSV file (see also http://stackoverflow.com/a/844443)
-        with codecs.open(file_path, 'w', encoding='utf8') as fp:
-            logger.info('Exporting search results to ' + file_path + '...')
-            writer = csv.writer(fp, delimiter=delimiter)
-
-            column_names = SearchResult.get_column_names()
-
-            # write header of CSV file
-            writer.writerow(column_names)
-
-            count = 0
-            for query in self.queries:
-                try:
-                    for row in query.get_rows():
-                        if len(row) == len(column_names):
-                            writer.writerow(row)
-                            count = count + 1
-                        else:
-                            raise IllegalArgumentError(
-                                str(abs(len(column_names) - len(row))) + ' parameter(s) is/are missing for query "'
-                                + str(query) + '"')
-
-                except UnicodeEncodeError:
-                    logger.error('Encoding error while writing data for query: ' + str(query))
-
-            logger.info(str(count) + ' search results have been exported.')
+        self.search_results.write_to_csv(output_dir, delimiter, self.filename)

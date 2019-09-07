@@ -6,8 +6,6 @@ logger = logging.getLogger("ddg-retriever_logger")
 class SearchResult(object):
     """ Search result retrieved from Duck Duck Go. """
 
-    # TODO: Continue here tomorrow
-
     def __init__(self, query, rank, url, title, snippet):
         self.query = query
         self.rank = rank

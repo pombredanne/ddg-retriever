@@ -10,7 +10,7 @@ logger = logging.getLogger('ddg-retriever_logger')
 
 def get_argument_parser():
     arg_parser = argparse.ArgumentParser(
-        description='Scrape search results from Duck Duck Go website.'
+        description='Remove non-English search results retrieved from Duck Duck Go website.'
     )
     arg_parser.add_argument(
         '-c', '--config-file',
@@ -43,13 +43,6 @@ def main():
     if input_file is None or output_dir is None or delimiter is None:
         logger.error("Required configuration missing.\nTerminating.")
         sys.exit()
-
-    # requests
-    exact_matches = config['DEFAULT'].getboolean('ExactMatches', True)
-    replace_parentheses = config['DEFAULT'].getboolean('ReplaceParentheses', True)
-    max_results = config['DEFAULT'].getint('MaxResults', 25)
-    min_wait = config['DEFAULT'].getint('MinWait', 500)
-    max_wait = config['DEFAULT'].getint('MaxWait', 2000)
 
     # process venues
     query_list = QueryList()

@@ -8,13 +8,15 @@ from ddg.search_result import SearchResult
 from random import randint
 from lxml import html
 
+from ddg.search_result_list import SearchResultList
+
 logger = logging.getLogger("ddg-retriever_logger")
 
 
 class Query(object):
     """ A venue on DBLP. """
 
-    parentheses_regex = re.compile("\s*[()]\s*")
+    parentheses_regex = re.compile("\\s*[()]\\s*")
 
     def __init__(self, query_string, exact_matches, replace_parentheses):
 
@@ -37,7 +39,7 @@ class Query(object):
             "Accept-Language": "en"
         }
 
-        self.search_results = []
+        self.search_results = SearchResultList()
 
         # session for data retrieval
         self.session = requests.Session()
@@ -66,7 +68,7 @@ class Query(object):
                     snippet = "".join(item.xpath('a[@class="result__snippet"]/descendant::text()'))
 
                     rank += 1
-                    self.search_results.append(SearchResult(
+                    self.search_results.values.append(SearchResult(
                         self.query_string,
                         str(rank),
                         url,
@@ -84,12 +86,6 @@ class Query(object):
 
         except ConnectionError:
             logger.error('An error occurred while retrieving result list for query: ' + str(self))
-
-    def get_rows(self):
-        rows = []
-        for query in self.search_results:
-            rows.append(query.get_column_values())
-        return rows
 
     def __str__(self):
         return str(self.query_string)
