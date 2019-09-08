@@ -3,8 +3,11 @@ import csv
 import logging
 import os
 
+from langdetect.lang_detect_exception import LangDetectException
+
 from ddg.search_result import SearchResult
 from util.exceptions import IllegalArgumentError
+from langdetect import detect, DetectorFactory
 
 logger = logging.getLogger("ddg-retriever_logger")
 
@@ -16,10 +19,10 @@ class SearchResultList(object):
         self.filename = ""
         self.values = []
 
-    def get_rows(self):
+    def get_rows(self, include_languages):
         rows = []
         for result in self.values:
-            rows.append(result.get_column_values())
+            rows.append(result.get_column_values(include_languages))
         return rows
 
     def read_from_csv(self, input_file, delimiter):
@@ -40,10 +43,6 @@ class SearchResultList(object):
             if not header:
                 raise IllegalArgumentError("Missing header in CSV file.")
 
-            venue_index = header.index("venue")
-            year_index = header.index("year")
-            identifier_index = header.index("identifier")
-
             query_index = header.index("query")
             rank_index = header.index("rank")
             url_index = header.index("url")
@@ -63,9 +62,20 @@ class SearchResultList(object):
         self.filename = os.path.basename(input_file)
         logger.info(str(len(self.values)) + " search results have been imported.")
 
-    def write_to_csv(self, output_dir, delimiter, filename=None):
+    def detect_languages(self):
+        logger.info("Detecting snippet languages...")
+        DetectorFactory.seed = 0
+
+        for search_result in self.values:
+            try:
+                search_result.language = detect(search_result.snippet)
+            except LangDetectException:
+                search_result.language = "error"
+
+    def write_to_csv(self, output_dir, delimiter, include_language, filename=None):
         """
         Export search results to a CSV file.
+        :param include_language: Add column "language" if tool was configured to detect languages of snippets
         :param filename: Filename of file to export
         :param output_dir: Target directory for generated CSV file.
         :param delimiter: Column delimiter in CSV file (typically ',').
@@ -88,23 +98,23 @@ class SearchResultList(object):
             logger.info('Exporting search results to ' + file_path + '...')
             writer = csv.writer(fp, delimiter=delimiter)
 
-            column_names = SearchResult.get_column_names()
+            column_names = SearchResult.get_column_names(include_language)
 
             # write header of CSV file
             writer.writerow(column_names)
 
             count = 0
             try:
-                for row in self.get_rows():
+                for row in self.get_rows(include_language):
                     if len(row) == len(column_names):
                         writer.writerow(row)
                         count = count + 1
                     else:
                         raise IllegalArgumentError(
-                            str(abs(len(column_names) - len(row))) + ' parameter(s) is/are missing for query "'
+                            str(abs(len(column_names) - len(row))) + ' parameter(s) is/are missing for "'
                             + str(row) + '"')
 
             except UnicodeEncodeError:
-                logger.error('Encoding error while writing data for query: ' + str(query))
+                logger.error('Encoding error while writing data for: ' + str(row))
 
             logger.info(str(count) + ' search results have been exported.')

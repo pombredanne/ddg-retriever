@@ -52,16 +52,19 @@ class QueryList(object):
         self.filename = os.path.basename(input_file)
         logger.info(str(len(self.values)) + " search queries have been imported.")
 
-    def retrieve_search_results(self, max_results, min_wait, max_wait):
+    def retrieve_search_results(self, max_results, min_wait, max_wait, detect_languages):
         for query in self.values:
             query.retrieve_search_results(max_results, min_wait, max_wait)
+            if detect_languages:
+                query.search_results.detect_languages()
             for search_result in query.search_results.values:
                 self.search_results.values.append(search_result)
 
-    def write_search_results_to_csv(self, output_dir, delimiter):
+    def write_search_results_to_csv(self, output_dir, delimiter, include_language):
         """
         Export search results to a CSV file.
+        :param include_language: Add column "language" if tool was configured to detect languages of snippets
         :param output_dir: Target directory for generated CSV file.
         :param delimiter: Column delimiter in CSV file (typically ',').
         """
-        self.search_results.write_to_csv(output_dir, delimiter, self.filename)
+        self.search_results.write_to_csv(output_dir, delimiter, include_language, self.filename)

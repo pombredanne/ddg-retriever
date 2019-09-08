@@ -1,9 +1,13 @@
 import argparse
+import codecs
 import configparser
+import csv
 import logging
 import sys
 
 from ddg.query_list import QueryList
+from ddg.search_result_list import SearchResultList
+from util.exceptions import IllegalArgumentError
 
 logger = logging.getLogger('ddg-retriever_logger')
 
@@ -51,11 +55,35 @@ def main():
     min_wait = config['DEFAULT'].getint('MinWait', 500)
     max_wait = config['DEFAULT'].getint('MaxWait', 2000)
 
-    # process venues
-    query_list = QueryList()
-    query_list.read_from_csv(input_file, exact_matches, replace_parentheses, delimiter)
-    query_list.retrieve_search_results(max_results, min_wait, max_wait)
-    query_list.write_search_results_to_csv(output_dir, delimiter)
+    # detecting languages of snippets
+    detect_languages = config['DEFAULT'].getboolean('DetectLanguages', True)
+
+    queries_only = False
+
+    # read CSV as UTF-8 encoded file (see also http://stackoverflow.com/a/844443)
+    with codecs.open(input_file, encoding='utf8') as fp:
+        logger.info("Checking input format in " + input_file + "...")
+        reader = csv.reader(fp, delimiter=delimiter)
+        # read header
+        header = next(reader, None)
+        if not header:
+            raise IllegalArgumentError("Missing header in CSV file.")
+        queries_only = len(header) == 1
+
+    if queries_only:
+        logger.info("Input file contains only queries, retrieving search results...")
+        query_list = QueryList()
+        query_list.read_from_csv(input_file, exact_matches, replace_parentheses, delimiter)
+        query_list.retrieve_search_results(max_results, min_wait, max_wait, detect_languages)
+        query_list.write_search_results_to_csv(output_dir, delimiter, detect_languages)
+    elif detect_languages:
+        logger.info("Input file contains search results, detecting language of snippets...")
+        search_result_list = SearchResultList()
+        search_result_list.read_from_csv(input_file, delimiter)
+        search_result_list.detect_languages()
+        search_result_list.write_to_csv(output_dir, delimiter, detect_languages)
+    else:
+        logger.info("No action configured, terminating...")
 
 
 if __name__ == '__main__':
