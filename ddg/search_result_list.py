@@ -17,7 +17,7 @@ class SearchResultList(object):
 
     def __init__(self):
         self.filename = ""
-        self.values = []
+        self.values = list()
 
     def get_rows(self, include_languages):
         rows = []

@@ -33,7 +33,7 @@ The configuration in stored in a [configuration file](config.ini):
     OutputDirectory = output
     Delimiter = ,
     ExactMatches = True
-    ReplaceParentheses = True
+    RemoveSpecialCharacters = True
     MaxResults = 25
     MinWait = 500
     MaxWait = 2000
@@ -86,7 +86,7 @@ And writes the [retrieved data](output/queries.csv) to the configured output dir
 | "Interrupt handler" |   2  | en       | https://www3.nd.edu/~lemmon/courses/ee224/web-manual/web-manual/lab7/node5.html | What is an Interrupt Handler? | What is an Interrupt Handler? Let's consider a program that the MicroStamp11 is executing. A program is a list of instructions that the micro-controller executes in a sequential manner. A hardware event is something special that happens in the micro-controller's hardware. An example of such an event is the RESET that occurs when pin 9 on the ...                                                 |
 | ...                 | ...  | ...      | ...                                                                             | ...                           | ...                                                                                                                                                                                                                                                                                                                                                                                                         |
 
-If `ReplaceParentheses` is `True`, the tool removes parentheses from the search queries:
+If `RemoveSpecialCharacters` is `True`, the tool splits the search query along certain special characters (see `Query.special_character_regex`):
 
 | query                 | rank | language | url                                                                             | title                           | snippet                                                                                                                                                                                                                                                                                                                                                                                                  |
 |-----------------------|------|----------|---------------------------------------------------------------------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

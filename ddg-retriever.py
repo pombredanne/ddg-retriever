@@ -50,7 +50,7 @@ def main():
 
     # requests
     exact_matches = config['DEFAULT'].getboolean('ExactMatches', True)
-    replace_parentheses = config['DEFAULT'].getboolean('ReplaceParentheses', True)
+    remove_special_characters = config['DEFAULT'].getboolean('RemoveSpecialCharacters', True)
     max_results = config['DEFAULT'].getint('MaxResults', 25)
     min_wait = config['DEFAULT'].getint('MinWait', 500)
     max_wait = config['DEFAULT'].getint('MaxWait', 2000)
@@ -73,7 +73,7 @@ def main():
     if queries_only:
         logger.info("Input file contains only queries, retrieving search results...")
         query_list = QueryList()
-        query_list.read_from_csv(input_file, exact_matches, replace_parentheses, delimiter)
+        query_list.read_from_csv(input_file, exact_matches, remove_special_characters, delimiter)
         query_list.retrieve_search_results(max_results, min_wait, max_wait, detect_languages)
         query_list.write_search_results_to_csv(output_dir, delimiter, detect_languages)
     elif detect_languages:

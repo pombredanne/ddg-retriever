@@ -15,14 +15,16 @@ class QueryList(object):
 
     def __init__(self):
         self.filename = ""
-        self.values = []
+        self.values = list()
+        self.unique_query_strings = set()
         self.search_results = SearchResultList()
 
-    def read_from_csv(self, input_file, exact_matches, replace_parentheses, delimiter):
+    def read_from_csv(self, input_file, exact_matches, remove_special_characters, delimiter):
         """
         Read search queries from a CSV file (header required).
-        :param replace_parentheses: Replace Wikipedia parentheses in query strings
-        :param exact_matches: Only search for exact matches of query strings
+        :param remove_special_characters: Split query string along special characters
+            (see Query.special_character_regex).
+        :param exact_matches: Only search for exact matches of query strings.
         :param input_file: Path to the CSV file.
         :param delimiter: Column delimiter in CSV file (typically ',').
         """
@@ -38,14 +40,23 @@ class QueryList(object):
             if not header:
                 raise IllegalArgumentError("Missing header in CSV file.")
 
-            query = header.index("query")
+            query_string = header.index("query")
 
             # read CSV file
             for row in reader:
                 if row:
-                    self.values.append(
-                        Query(row[query], exact_matches, replace_parentheses)
-                    )
+                    query = Query(row[query_string], exact_matches, remove_special_characters)
+
+                    if query.is_empty:
+                        logger.info("Empty query skipped: " + str(query))
+                        continue
+
+                    if query.query_string in self.unique_query_strings:
+                        logger.info("Duplicate query skipped: " + str(query))
+                        continue
+
+                    self.unique_query_strings.add(query.query_string)
+                    self.values.append(query)
                 else:
                     raise IllegalArgumentError("Wrong CSV format.")
 
@@ -55,8 +66,13 @@ class QueryList(object):
     def retrieve_search_results(self, max_results, min_wait, max_wait, detect_languages):
         for query in self.values:
             query.retrieve_search_results(max_results, min_wait, max_wait)
+
+            if query.is_empty:
+                continue
+
             if detect_languages:
                 query.search_results.detect_languages()
+
             for search_result in query.search_results.values:
                 self.search_results.values.append(search_result)
 

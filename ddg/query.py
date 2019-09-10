@@ -16,22 +16,29 @@ logger = logging.getLogger("ddg-retriever_logger")
 class Query(object):
     """ A venue on DBLP. """
 
-    parentheses_regex = re.compile("\\s*[()]\\s*")
+    special_character_regex = re.compile("\\s*[()/\\\\?;:,]+\\s*")
 
-    def __init__(self, query_string, exact_matches, replace_parentheses):
+    def __init__(self, query_string, exact_matches, remove_special_characters):
+        self.query_string = str(query_string)
+        self.is_empty = False
 
-        if replace_parentheses:
-            sub_queries = filter(lambda q: len(q) > 0, Query.parentheses_regex.split(query_string))
+        if remove_special_characters:
+            sub_queries = list(filter(lambda q: len(q) > 0, Query.special_character_regex.split(query_string)))
 
-            if exact_matches:
-                self.query_string = '"' + '" "'.join(sub_queries) + '"'
+            if len(sub_queries) == 0:
+                self.is_empty = True
             else:
-                self.query_string = ' '.join(sub_queries)
+                if exact_matches:
+                    self.query_string = '"' + '" "'.join(sub_queries) + '"'
+                else:
+                    self.query_string = ' '.join(sub_queries)
         else:
-            if exact_matches:
-                self.query_string = '"' + str(query_string) + '"'
-            else:
-                self.query_string = str(query_string)
+            self.query_string = str(query_string).strip()
+
+            if len(self.query_string) == 0:
+                self.is_empty = True
+            elif exact_matches:
+                self.query_string = '"' + self.query_string + '"'
 
         self.uri = 'https://duckduckgo.com/html/?q=' + urllib.parse.quote(self.query_string)
         self.headers = {
@@ -45,6 +52,9 @@ class Query(object):
         self.session = requests.Session()
 
     def retrieve_search_results(self, max_results, min_wait, max_wait):
+        if self.is_empty:
+            return
+
         try:
             # reduce request frequency as configured
             delay = randint(min_wait, max_wait)  # delay between requests in milliseconds
@@ -68,19 +78,28 @@ class Query(object):
                     snippet = "".join(item.xpath('a[@class="result__snippet"]/descendant::text()'))
 
                     rank += 1
-                    self.search_results.values.append(SearchResult(
-                        self.query_string,
-                        str(rank),
-                        url,
-                        title,
-                        snippet
-                    ))
+
+                    if len(url) == 0 or len(title) == 0:
+                        logger.info("Rank " + str(rank) + " empty for query: " + str(self))
+                    else:
+                        self.search_results.values.append(SearchResult(
+                            self.query_string,
+                            str(rank),
+                            url,
+                            title,
+                            snippet
+                        ))
 
                     # retrieve only up to max_results results
                     if rank == max_results:
                         break
 
-                logger.info('Successfully parsed result list for query: ' + str(self))
+                    if len(self.search_results.values) == 0:
+                        logger.info("No search results retrieved for query: " + str(self))
+                        self.is_empty = True
+
+                if not self.is_empty:
+                    logger.info('Successfully parsed result list for query: ' + str(self))
             else:
                 logger.error('An error occurred while retrieving result list for query: ' + str(self))
 
