@@ -48,7 +48,11 @@ class QueryList(object):
                     query = Query(row[query_string], exact_matches, remove_special_characters)
 
                     if query.is_empty:
-                        logger.info("Empty query skipped: " + str(query))
+                        # print query string if it contains not only whitespaces (but, e.g., ignored characters)
+                        if len(str(query).strip()) == 0:
+                            logger.info("Empty query skipped.")
+                        else:
+                            logger.info("Empty query skipped: " + str(query))
                         continue
 
                     if query.query_string in self.unique_query_strings:
