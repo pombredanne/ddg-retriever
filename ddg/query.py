@@ -83,6 +83,8 @@ class Query(object):
 
                     if len(url) == 0 or len(title) == 0:
                         logger.info("Rank " + str(rank) + " empty for query: " + str(self))
+                        self.handle_error(max_results, min_wait, max_wait, depth)
+                        return
                     else:
                         self.search_results.values.append(SearchResult(
                             self.query_string,
@@ -103,21 +105,30 @@ class Query(object):
                 if not self.is_empty:
                     logger.info('Successfully parsed result list for query: ' + str(self))
             else:
-                logger.error('An error occurred while retrieving result list for query: ' + str(self))
+                self.handle_error(max_results, min_wait, max_wait, depth)
+                return
 
         except (ConnectionError, OSError, requests.exceptions.RequestException) as e:
-            logger.error('An error occurred while retrieving result list for query: ' + str(self))
-            if depth <= 5 and (isinstance(e, requests.exceptions.RequestException)
-                               or (type(e) == OSError and e.errno == errno.ENETDOWN)):
-                logger.info('Retrying after one minute... ')
-                time.sleep(60)
-                self.retrieve_search_results(max_results, min_wait, max_wait, depth + 1)
-            elif type(e) == ConnectionError or isinstance(e, requests.exceptions.RequestException):
-                logger.info('Continuing with next query...')
-                return
-            else:
-                logger.error('Terminating.')
-                sys.exit(1)
+            self.handle_error(max_results, min_wait, max_wait, depth, e)
+            return
+
+    def handle_error(self, max_results, min_wait, max_wait, depth=0, e=None):
+        logger.error('An error occurred while retrieving result list for query: ' + str(self))
+        if depth < 3 and (e is None
+                          or isinstance(e, requests.exceptions.RequestException)
+                          or (type(e) == OSError and e.errno == errno.ENETDOWN)):
+            logger.error('Resetting result list for query: ' + str(self))
+            self.search_results = SearchResultList()
+            logger.info('Retrying in 30 seconds... ')
+            time.sleep(30)
+            self.retrieve_search_results(max_results, min_wait, max_wait, depth + 1)
+            return
+        elif type(e) == OSError:
+            logger.error('Terminating.')
+            sys.exit(1)
+        else:
+            logger.info('Continuing with next query...')
+            return
 
     def __str__(self):
         return str(self.query_string)
