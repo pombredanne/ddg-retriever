@@ -54,6 +54,7 @@ def main():
     max_results = config['DEFAULT'].getint('MaxResults', 25)
     min_wait = config['DEFAULT'].getint('MinWait', 500)
     max_wait = config['DEFAULT'].getint('MaxWait', 2000)
+    wait_on_error = config['DEFAULT'].getint('WaitOnError', 30000)
 
     # detecting languages of snippets
     detect_languages = config['DEFAULT'].getboolean('DetectLanguages', True)
@@ -74,7 +75,7 @@ def main():
         logger.info("Input file contains only queries, retrieving search results...")
         query_list = QueryList()
         query_list.read_from_csv(input_file, exact_matches, remove_special_characters, delimiter)
-        query_list.retrieve_search_results(max_results, min_wait, max_wait, detect_languages)
+        query_list.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error, detect_languages)
         query_list.write_search_results_to_csv(output_dir, delimiter, detect_languages)
     elif detect_languages:
         logger.info("Input file contains search results, detecting language of snippets...")

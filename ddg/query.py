@@ -53,14 +53,14 @@ class Query(object):
         # session for data retrieval
         self.session = requests.Session()
 
-    def retrieve_search_results(self, max_results, min_wait, max_wait, depth=0):
+    def retrieve_search_results(self, max_results, min_wait, max_wait, wait_on_error, depth=0):
         if self.is_empty:
             return
 
         try:
             # reduce request frequency as configured
             delay = randint(min_wait, max_wait)  # delay between requests in milliseconds
-            time.sleep(delay / 1000)  # sleep for delay ms to prevent getting blocked
+            time.sleep(delay/1000)  # sleep for delay ms to prevent getting blocked
 
             # retrieve data
             response = self.session.get(self.uri, headers=self.headers)
@@ -83,7 +83,7 @@ class Query(object):
 
                     if len(url) == 0 or len(title) == 0:
                         logger.info("Rank " + str(rank) + " empty for query: " + str(self))
-                        self.handle_error(max_results, min_wait, max_wait, depth)
+                        self.handle_error(max_results, min_wait, max_wait, wait_on_error, depth)
                         return
                     else:
                         self.search_results.values.append(SearchResult(
@@ -105,23 +105,23 @@ class Query(object):
                 if not self.is_empty:
                     logger.info('Successfully parsed result list for query: ' + str(self))
             else:
-                self.handle_error(max_results, min_wait, max_wait, depth)
+                self.handle_error(max_results, min_wait, max_wait, wait_on_error, depth)
                 return
 
         except (ConnectionError, OSError, requests.exceptions.RequestException) as e:
-            self.handle_error(max_results, min_wait, max_wait, depth, e)
+            self.handle_error(max_results, min_wait, max_wait, wait_on_error, depth, e)
             return
 
-    def handle_error(self, max_results, min_wait, max_wait, depth=0, e=None):
+    def handle_error(self, max_results, min_wait, max_wait, wait_on_error, depth=0, e=None):
         logger.error('An error occurred while retrieving result list for query: ' + str(self))
         if depth < 3 and (e is None
                           or isinstance(e, requests.exceptions.RequestException)
                           or (type(e) == OSError and e.errno == errno.ENETDOWN)):
             logger.error('Resetting result list for query: ' + str(self))
             self.search_results = SearchResultList()
-            logger.info('Retrying in 30 seconds... ')
-            time.sleep(30)
-            self.retrieve_search_results(max_results, min_wait, max_wait, depth + 1)
+            logger.info('Retrying in ' + str(wait_on_error) + ' milliseconds... ')
+            time.sleep(wait_on_error/1000)
+            self.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error, depth+1)
             return
         elif type(e) == OSError:
             logger.error('Terminating.')

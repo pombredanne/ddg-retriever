@@ -68,14 +68,14 @@ class QueryList(object):
         self.filename = os.path.basename(input_file)
         logger.info(str(len(self.values)) + " search queries have been imported.")
 
-    def retrieve_search_results(self, max_results, min_wait, max_wait, detect_languages):
+    def retrieve_search_results(self, max_results, min_wait, max_wait, wait_on_error, detect_languages):
         count = 0
         for query in self.values:
             if count == 0 or count % log_pace == 0:
                 logger.info('{0:.2f}'.format(count/len(self.values)*100) + '% of the queries have been processed.')
             count = count + 1
 
-            query.retrieve_search_results(max_results, min_wait, max_wait)
+            query.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error)
 
             if query.is_empty:
                 continue
