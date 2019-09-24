@@ -105,16 +105,18 @@ class Query(object):
             else:
                 logger.error('An error occurred while retrieving result list for query: ' + str(self))
 
-        except (ConnectionError, OSError) as e:
+        except (ConnectionError, OSError, requests.exceptions.RequestException) as e:
             logger.error('An error occurred while retrieving result list for query: ' + str(self))
-            if depth <= 5 and (type(e) == requests.exceptions.ConnectionError
+            if depth <= 5 and (isinstance(e, requests.exceptions.RequestException)
                                or (type(e) == OSError and e.errno == errno.ENETDOWN)):
-                logger.info('Retrying after one minute... ' + str(self))
+                logger.info('Retrying after one minute... ')
                 time.sleep(60)
                 self.retrieve_search_results(max_results, min_wait, max_wait, depth + 1)
+            elif type(e) == ConnectionError or isinstance(e, requests.exceptions.RequestException):
+                logger.info('Continuing with next query...')
+                return
             else:
-                logger.error('Error while processing query: ' + str(self))
-                logger.error('Terminating...')
+                logger.error('Terminating.')
                 sys.exit(1)
 
     def __str__(self):
