@@ -1,5 +1,7 @@
+import errno
 import logging
 import re
+import sys
 import urllib.parse
 import requests
 import time
@@ -51,7 +53,7 @@ class Query(object):
         # session for data retrieval
         self.session = requests.Session()
 
-    def retrieve_search_results(self, max_results, min_wait, max_wait):
+    def retrieve_search_results(self, max_results, min_wait, max_wait, depth=0):
         if self.is_empty:
             return
 
@@ -103,8 +105,17 @@ class Query(object):
             else:
                 logger.error('An error occurred while retrieving result list for query: ' + str(self))
 
-        except ConnectionError:
+        except (ConnectionError, OSError) as e:
             logger.error('An error occurred while retrieving result list for query: ' + str(self))
+            if depth <= 5 and (type(e) == requests.exceptions.ConnectionError
+                               or (type(e) == OSError and e.errno == errno.ENETDOWN)):
+                logger.info('Retrying after one minute... ' + str(self))
+                time.sleep(60)
+                self.retrieve_search_results(max_results, min_wait, max_wait, depth + 1)
+            else:
+                logger.error('Error while processing query: ' + str(self))
+                logger.error('Terminating...')
+                sys.exit(1)
 
     def __str__(self):
         return str(self.query_string)
