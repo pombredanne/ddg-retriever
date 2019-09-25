@@ -87,6 +87,8 @@ def main():
     else:
         logger.info("No action configured, terminating...")
 
+    logger.info("Finished.")
+
 
 if __name__ == '__main__':
     main()

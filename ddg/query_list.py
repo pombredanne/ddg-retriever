@@ -23,8 +23,7 @@ class QueryList(object):
 
     def initialize(self, filename, queries):
         self.filename = str(filename)
-        for query_string in queries:
-            query = Query(query_string, False, False)
+        for query in queries:
             self.add_query(query)
 
     def add_query(self, query):
@@ -169,5 +168,5 @@ class QueryList(object):
 
         logger.info("Writing failed queries...")
         failed_queries = QueryList()
-        failed_queries.initialize("failed_queries.csv", self.failed_queries)
+        failed_queries.initialize("training_failed_queries.csv", self.failed_queries)
         failed_queries.write_to_csv(output_dir, delimiter)
