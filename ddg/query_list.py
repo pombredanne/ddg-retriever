@@ -168,5 +168,5 @@ class QueryList(object):
 
         logger.info("Writing failed queries...")
         failed_queries = QueryList()
-        failed_queries.initialize("training_failed_queries.csv", self.failed_queries)
+        failed_queries.initialize("failed_queries.csv", self.failed_queries)
         failed_queries.write_to_csv(output_dir, delimiter)
