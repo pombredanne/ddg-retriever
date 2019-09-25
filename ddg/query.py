@@ -6,6 +6,8 @@ import urllib.parse
 import requests
 import time
 
+import unidecode as unidecode
+
 from ddg.search_result import SearchResult
 from random import randint
 from lxml import html
@@ -21,8 +23,11 @@ class Query(object):
     special_character_regex = re.compile("\\s*[()/\\\\?;:,]+\\s*")
 
     def __init__(self, query_string, exact_matches, remove_special_characters):
-        self.query_string = str(query_string)
+        # transliterate unicode string into closest possible ASCII representation
+        # not doing this caused issues with queries such as "L'Hôpital's rule"
+        self.query_string = unidecode.unidecode(query_string)
         self.is_empty = False
+        self.has_failed = False
 
         if remove_special_characters:
             sub_queries = list(filter(lambda q: len(q) > 0, Query.special_character_regex.split(query_string)))
@@ -43,8 +48,11 @@ class Query(object):
                 self.query_string = '"' + self.query_string + '"'
 
         self.uri = 'https://duckduckgo.com/html/?q=' + urllib.parse.quote(self.query_string)
+        # see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0",
+            "Accept": "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8",
+            "Accept-Charset": "utf-8",
             "Accept-Language": "en"
         }
 
@@ -126,9 +134,20 @@ class Query(object):
         elif type(e) == OSError:
             logger.error('Terminating.')
             sys.exit(1)
+        elif not self.has_failed:
+            self.has_failed = True
+            logger.info('Stopping this query, continuing with next query...')
+            return
         else:
-            logger.info('Continuing with next query...')
+            logger.info('Unable to retrieve search results for query: ' + str(self))
             return
 
     def __str__(self):
         return str(self.query_string)
+
+    def get_column_values(self):
+        return [self.query_string]
+
+    @classmethod
+    def get_column_names(cls):
+        return ["query"]

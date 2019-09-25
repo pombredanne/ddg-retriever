@@ -63,6 +63,9 @@ class SearchResultList(object):
         logger.info(str(len(self.values)) + " search results have been imported.")
 
     def detect_languages(self):
+        if len(self.values) == 0:
+            return
+
         logger.info("Detecting snippet languages...")
         DetectorFactory.seed = 0
 
@@ -75,10 +78,10 @@ class SearchResultList(object):
     def write_to_csv(self, output_dir, delimiter, include_language, filename=None):
         """
         Export search results to a CSV file.
-        :param include_language: Add column "language" if tool was configured to detect languages of snippets
-        :param filename: Filename of file to export
         :param output_dir: Target directory for generated CSV file.
         :param delimiter: Column delimiter in CSV file (typically ',').
+        :param include_language: Add column "language" if tool was configured to detect languages of snippets.
+        :param filename: Filename of file to export.
         """
 
         if filename is not None:
