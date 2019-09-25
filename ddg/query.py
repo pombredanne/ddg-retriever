@@ -30,7 +30,7 @@ class Query(object):
         self.has_failed = False
 
         if remove_special_characters:
-            sub_queries = list(filter(lambda q: len(q) > 0, Query.special_character_regex.split(query_string)))
+            sub_queries = list(filter(lambda q: len(q) > 0, Query.special_character_regex.split(self.query_string)))
 
             if len(sub_queries) == 0:
                 self.is_empty = True
@@ -40,7 +40,7 @@ class Query(object):
                 else:
                     self.query_string = ' '.join(sub_queries)
         else:
-            self.query_string = str(query_string).strip()
+            self.query_string = str(self.query_string).strip()
 
             if len(self.query_string) == 0:
                 self.is_empty = True
