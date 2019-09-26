@@ -91,9 +91,6 @@ class QueryList(object):
 
         query.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error)
 
-        if query.is_empty:
-            return
-
         if detect_languages:
             query.search_results.detect_languages()
 
