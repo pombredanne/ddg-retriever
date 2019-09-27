@@ -128,11 +128,11 @@ class Query(object):
 
     def handle_error(self, max_results, min_wait, max_wait, wait_on_error, depth=0, e=None):
         logger.error('An error occurred while retrieving result list for query: ' + str(self))
+        logger.error('Resetting result list for query: ' + str(self))
+        self.search_results = SearchResultList()
         if depth < 3 and (e is None
                           or isinstance(e, requests.exceptions.RequestException)
                           or (type(e) == OSError and e.errno == errno.ENETDOWN)):
-            logger.error('Resetting result list for query: ' + str(self))
-            self.search_results = SearchResultList()
             logger.info('Retrying in ' + str(wait_on_error) + ' milliseconds... ')
             time.sleep(wait_on_error/1000)
             self.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error, depth+1)
