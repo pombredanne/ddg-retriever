@@ -70,7 +70,7 @@ class Query(object):
         try:
             # reduce request frequency as configured
             delay = randint(min_wait, max_wait)  # delay between requests in milliseconds
-            time.sleep(delay/1000)  # sleep for delay ms to prevent getting blocked
+            time.sleep(delay / 1000)  # sleep for delay ms to prevent getting blocked
 
             # retrieve data
             response = self.session.get(self.uri, headers=self.headers)
@@ -97,7 +97,8 @@ class Query(object):
 
                     if is_empty:
                         logger.info("Rank " + str(rank) + " empty for query: " + str(self))
-                        self.handle_error(max_results, min_wait, max_wait, wait_on_error, depth)
+                        self.handle_error(max_results, min_wait, max_wait, wait_on_error,
+                                          check_for_empty_snippets, depth)
                         return
                     else:
                         self.search_results.values.append(SearchResult(
@@ -126,16 +127,20 @@ class Query(object):
             self.handle_error(max_results, min_wait, max_wait, wait_on_error, depth, e)
             return
 
-    def handle_error(self, max_results, min_wait, max_wait, wait_on_error, depth=0, e=None):
+    def handle_error(self, max_results, min_wait, max_wait, wait_on_error, check_for_empty_snippets, depth=0, e=None):
         logger.error('An error occurred while retrieving result list for query: ' + str(self))
         logger.error('Resetting result list for query: ' + str(self))
         self.search_results = SearchResultList()
-        if depth < 3 and (e is None
-                          or isinstance(e, requests.exceptions.RequestException)
-                          or (type(e) == OSError and e.errno == errno.ENETDOWN)):
+        if depth <= 2 and (e is None
+                           or isinstance(e, requests.exceptions.RequestException)
+                           or (type(e) == OSError and e.errno == errno.ENETDOWN)):
+            # ignore empty snippets in last iteration
+            if depth == 2:
+                check_for_empty_snippets = False
             logger.info('Retrying in ' + str(wait_on_error) + ' milliseconds... ')
-            time.sleep(wait_on_error/1000)
-            self.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error, depth+1)
+            time.sleep(wait_on_error / 1000)
+            self.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error,
+                                         check_for_empty_snippets, depth + 1)
             return
         elif type(e) == OSError:
             logger.error('Terminating.')
