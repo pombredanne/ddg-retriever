@@ -38,6 +38,7 @@ The configuration in stored in a [configuration file](config.ini):
     MinWait = 500
     MaxWait = 2000
     DetectLanguages = True
+    CheckForEmptySnippets = True
 
 As input, the tool expects a CSV file with one column named `query`.
 An exemplary input file can be found [here](input/queries.csv):
@@ -93,3 +94,9 @@ If `RemoveSpecialCharacters` is `True`, the tool splits the search query along c
 | ...                   | ...  | ...      | ...                                                                             | ...                             | ...                                                                                                                                                                                                                                                                                                                                                                                                      |
 | "Plug-in" "computing" | 1    | en       | https://en.wikipedia.org/wiki/Plug-in_%28computing%29                           | Plug-in (computing) - Wikipedia | In computing, a plug-in (or plugin, add-in, addin, add-on, or addon) is a software component that adds a specific feature to an existing computer program. When a program supports plug-ins, it enables customization.                                                                                                                                                                                   |
 | ...                   | ...  | ...      | ...                                                                             | ...                             | ...                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+When re-running the retrieval for failed queries, which are automatically exported to `<OUTPUT-DIR>/failed_queries.csv`, please update the configuration as follows:
+
+    ExactMatches = False
+    RemoveSpecialCharacters = False
+    CheckForEmptySnippets=False
