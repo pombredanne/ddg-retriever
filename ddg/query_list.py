@@ -77,19 +77,22 @@ class QueryList(object):
         self.filename = os.path.basename(input_file)
         logger.info(str(len(self.values)) + " search queries have been imported.")
 
-    def retrieve_search_results(self, max_results, min_wait, max_wait, wait_on_error, detect_languages):
+    def retrieve_search_results(self, max_results, min_wait, max_wait, wait_on_error,
+                                detect_languages, check_for_empty_snippets):
         count = 0
         for query in self.values:
-            self.handle_query(query, max_results, min_wait, max_wait, wait_on_error, detect_languages, count)
+            self.handle_query(query, count, max_results, min_wait, max_wait, wait_on_error,
+                              detect_languages, check_for_empty_snippets)
             count = count + 1
         # save failed queries
         self.failed_queries = [query for query in self.values if query.has_failed]
 
-    def handle_query(self, query, max_results, min_wait, max_wait, wait_on_error, detect_languages, count):
+    def handle_query(self, query, count, max_results, min_wait, max_wait, wait_on_error,
+                     detect_languages, check_for_empty_snippets):
         if count == 0 or count % log_pace == 0:
             logger.info('{0:.2f}'.format(count / len(self.values) * 100) + '% of the queries have been processed.')
 
-        query.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error)
+        query.retrieve_search_results(max_results, min_wait, max_wait, wait_on_error, check_for_empty_snippets)
 
         if detect_languages:
             query.search_results.detect_languages()

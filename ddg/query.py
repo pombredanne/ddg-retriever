@@ -61,7 +61,8 @@ class Query(object):
         # session for data retrieval
         self.session = requests.Session()
 
-    def retrieve_search_results(self, max_results, min_wait, max_wait, wait_on_error, depth=0):
+    def retrieve_search_results(self, max_results, min_wait, max_wait, wait_on_error,
+                                check_for_empty_snippets, depth=0):
         if self.is_empty:
             logger.info("Empty query skipped.")
             return
@@ -90,7 +91,11 @@ class Query(object):
 
                     rank += 1
 
-                    if len(url) == 0 or len(title) == 0 or len(snippet) == 0:
+                    is_empty = len(url) == 0 or len(title) == 0
+                    if check_for_empty_snippets:
+                        is_empty = is_empty or len(snippet) == 0
+
+                    if is_empty:
                         logger.info("Rank " + str(rank) + " empty for query: " + str(self))
                         self.handle_error(max_results, min_wait, max_wait, wait_on_error, depth)
                         return
