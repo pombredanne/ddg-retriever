@@ -35,13 +35,13 @@ training_set[is.na(training_set$snippet)]$query
 
 testing_set <- fread("testing.csv", header=TRUE, sep=",", quote="\"", strip.white=TRUE, showProgress=TRUE, encoding="UTF-8", na.strings=c("", "null"), stringsAsFactors=FALSE)
 nrow(testing_set)
-#
+# 47,831
 
 length(which(is.na(testing_set$url)))
-#
+# 0
 
 length(which(is.na(testing_set$title)))
-#
+# 0
 
 length(which(is.na(testing_set$snippet)))
-#
+# 1
