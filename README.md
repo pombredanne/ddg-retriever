@@ -2,6 +2,8 @@
 
 Retrieve search results from [Duck Duck Go](https://duckduckgo.com/).
 
+[![DOI](https://zenodo.org/badge/204611446.svg)](https://zenodo.org/badge/latestdoi/204611446)
+
 # Setup
 
 Python 3 is required. The dependencies are specified in `requirements.txt`.
